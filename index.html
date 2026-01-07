@@ -2,139 +2,115 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taj Restaurant Menu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Taj Menu</title>
     <style>
-        /* Reset and Base Styles */
+        /* Base Setup */
         body, html {
             margin: 0;
             padding: 0;
-            height: 100%;
-            background-color: #2b1b17; /* Dark background */
+            background-color: #2b1b17;
             font-family: sans-serif;
-            overflow: hidden; /* Prevents body scroll, we scroll the container instead */
+            overflow: hidden; /* Lock the body so only the slider moves */
+            height: 100%;
         }
 
-        /* Header Styling */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 50px;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: #d4af37;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        header h1 {
-            font-size: 18px;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Page Counter (e.g., "1 / 18") */
-        .page-indicator {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            color: #fff;
-            font-size: 14px;
-            z-index: 101;
-            font-weight: bold;
-        }
-
-        /* The Scroll Container (The Magic Part) */
+        /* THE MAGIC PART: 
+           This container handles the horizontal swipe.
+        */
         .slider-container {
             display: flex;
             width: 100%;
-            height: 100%;
-            overflow-x: scroll;          /* Enables horizontal scrolling */
+            height: 100dvh; /* dvh = Dynamic Viewport Height (Best for mobile browsers) */
+            overflow-x: scroll;
             overflow-y: hidden;
-            scroll-snap-type: x mandatory; /* Forces the swipe to 'snap' to the next image */
+            
+            /* Snap Settings */
+            scroll-snap-type: x mandatory; 
             scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch; /* smooth scrolling for iOS */
+            
+            /* Hide Scrollbar */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+        
+        /* Hide scrollbar for Chrome/Safari */
+        .slider-container::-webkit-scrollbar {
+            display: none; 
         }
 
-        /* Individual Slides */
+        /* Individual Page Settings */
         .slide {
-            flex: 0 0 100%;  /* Each slide takes up 100% of the width */
+            flex: 0 0 100%; /* Force width to exactly 100% of screen */
             width: 100%;
-            height: 100%;
-            scroll-snap-align: center; /* Snaps image to center of screen */
+            height: 100dvh;
+            
+            /* Snap Align */
+            scroll-snap-align: center;
+            
+            /* THIS IS THE FIX: Prevents skipping pages! */
+            scroll-snap-stop: always; 
+            
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
         }
 
-        /* The Menu Image itself */
+        /* Image sizing */
         .slide img {
             max-width: 100%;
             max-height: 100%;
-            object-fit: contain; /* Ensures the whole page is visible without cropping */
-            display: block;
+            object-fit: contain; /* Ensures full page is seen */
+            user-select: none;   /* Prevents highlighting image while swiping */
+            -webkit-user-drag: none; /* Prevents dragging the image ghost */
         }
 
-        /* Navigation Arrows (for Desktop) */
-        .nav-btn {
+        /* Header & Counter */
+        header {
             position: fixed;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: rgba(255, 255, 255, 0.3);
-            color: white;
-            border: none;
-            padding: 15px;
-            cursor: pointer;
+            top: 0;
+            width: 100%;
+            padding: 15px 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            color: #d4af37;
+            text-align: center;
             z-index: 100;
-            border-radius: 50%;
-            font-size: 20px;
-            transition: background 0.3s;
+            pointer-events: none; /* Allows swiping even if touching the header area */
         }
-        .nav-btn:hover { background-color: rgba(255, 255, 255, 0.6); }
-        .prev-btn { left: 10px; }
-        .next-btn { right: 10px; }
-
-        /* Hide arrows on mobile (since they can swipe) */
-        @media (max-width: 768px) {
-            .nav-btn { display: none; }
+        
+        .page-counter {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
         }
 
-        /* Sticky Call Button */
+        /* Call Button */
         .call-btn {
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             background-color: #25D366;
             color: white;
-            padding: 12px 30px;
+            padding: 12px 35px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             z-index: 200;
-            white-space: nowrap;
         }
     </style>
 </head>
 <body>
 
     <!-- <header>
-        <h1>Taj Menu</h1>
-    </header>
-    
-    <div class="page-indicator" id="pageIndicator">1 / 18</div>
-
-    <button class="nav-btn prev-btn" onclick="moveSlide(-1)">&#10094;</button>
-    <button class="nav-btn next-btn" onclick="moveSlide(1)">&#10095;</button> -->
+        <div class="page-counter" id="counter">1 / 18</div>
+    </header> -->
 
     <div class="slider-container" id="slider">
         <div class="slide"><img src="page1.jpg" alt="Page 1"></div>
@@ -160,23 +136,23 @@
 
     <script>
         const slider = document.getElementById('slider');
-        const indicator = document.getElementById('pageIndicator');
+        const counter = document.getElementById('counter');
         const totalPages = 18;
 
-        // Function for arrow buttons (Desktop)
-        function moveSlide(direction) {
-            const slideWidth = slider.clientWidth;
-            slider.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
-        }
-
-        // Update the "1 / 18" counter when scrolling
+        // Efficiently update the page counter on scroll
+        let isScrolling;
         slider.addEventListener('scroll', () => {
-            const slideWidth = slider.clientWidth;
-            // Calculate current page based on scroll position
-            const currentPage = Math.round(slider.scrollLeft / slideWidth) + 1;
-            indicator.innerText = `${currentPage} / ${totalPages}`;
+            window.clearTimeout(isScrolling);
+            isScrolling = setTimeout(() => {
+                const width = slider.clientWidth;
+                const scrollPos = slider.scrollLeft;
+                const currentPage = Math.round(scrollPos / width) + 1;
+                
+                // Ensure we don't show "0" or "19" by accident
+                const safePage = Math.min(Math.max(currentPage, 1), totalPages);
+                counter.innerText = `${safePage} / ${totalPages}`;
+            }, 50); // Small delay for performance
         });
     </script>
-
 </body>
 </html>
