@@ -11,45 +11,25 @@
             padding: 0;
             background-color: #2b1b17;
             font-family: sans-serif;
-            overflow: hidden; 
+            overflow: hidden; /* Lock the whole page */
             height: 100%;
         }
 
+        /* STRICT MODE CONTAINER 
+           We use 'overflow: hidden' to disable native scrolling.
+           The Javascript below will handle the movement.
+        */
         .slider-container {
             display: flex;
             width: 100%;
             height: 100dvh; 
-            overflow-x: scroll;
-            overflow-y: hidden;
-            
-            /* Snap Settings - Strict */
-            scroll-snap-type: x mandatory; 
-            
-            /* REMOVED 'scroll-behavior: smooth' to prevent skipping pages */
-            
-            /* Prevent bounce effects on edges */
-            overscroll-behavior-x: contain;
-            
-            /* Hide Scrollbar */
-            scrollbar-width: none; 
-            -ms-overflow-style: none; 
-        }
-        
-        .slider-container::-webkit-scrollbar {
-            display: none; 
+            overflow: hidden; /* This stops the user from scrolling freely */
+            transition: transform 0.3s ease-out; /* Smooth animation */
         }
 
         .slide {
-            flex: 0 0 100%;
-            width: 100%;
+            min-width: 100%; /* Each slide is exactly 100% width */
             height: 100dvh;
-            
-            /* Align to start is more stable than center for full width */
-            scroll-snap-align: start;
-            
-            /* STRICT STOP: Forces the scroll to stop at the very next element */
-            scroll-snap-stop: always; 
-            
             display: flex;
             align-items: center;
             justify-content: center;
@@ -61,29 +41,30 @@
             max-height: 100%;
             object-fit: contain; 
             user-select: none; 
-            -webkit-user-drag: none; 
+            -webkit-user-drag: none;
+            pointer-events: none; /* Helps swipe detection on some devices */
         }
 
-        /* Styles for the counter if you decide to uncomment it later */
+        /* Counter Styling */
         header {
             position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 15px 0;
-            pointer-events: none;
+            top: 20px;
+            right: 20px;
             z-index: 100;
-            text-align: center;
+            pointer-events: none;
         }
 
         .page-counter {
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            padding: 5px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #d4af37; /* Gold Text */
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 14px;
-            display: inline-block;
+            font-weight: bold;
+            font-size: 16px;
+            border: 1px solid #d4af37;
         }
 
+        /* Call Button */
         .call-btn {
             position: fixed;
             bottom: 30px;
@@ -102,6 +83,10 @@
     </style>
 </head>
 <body>
+
+    <header>
+        <div class="page-counter" id="counter">1 / 18</div>
+    </header>
 
     <div class="slider-container" id="slider">
         <div class="slide"><img src="page1.jpg" alt="Page 1"></div>
@@ -123,27 +108,55 @@
         <div class="slide"><img src="page17.jpg" alt="Page 17"></div>
         <div class="slide"><img src="page18.jpg" alt="Page 18"></div>
     </div>
-    
+
 
     <script>
         const slider = document.getElementById('slider');
-        const counter = document.getElementById('counter'); // This might be null if HTML is commented out
-        const totalPages = 18;
+        const counter = document.getElementById('counter');
+        const totalSlides = 18;
+        let currentIndex = 0;
+        let startX = 0;
+        let endX = 0;
 
-        let isScrolling;
-        slider.addEventListener('scroll', () => {
-            // Only run logic if the counter actually exists in the HTML
-            if (counter) {
-                window.clearTimeout(isScrolling);
-                isScrolling = setTimeout(() => {
-                    const width = slider.clientWidth;
-                    const scrollPos = slider.scrollLeft;
-                    const currentPage = Math.round(scrollPos / width) + 1;
-                    const safePage = Math.min(Math.max(currentPage, 1), totalPages);
-                    counter.innerText = `${safePage} / ${totalPages}`;
-                }, 50);
+        // 1. Listen for the start of a touch
+        document.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+        }, false);
+
+        // 2. Listen for the end of a touch
+        document.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].clientX;
+            handleSwipe();
+        }, false);
+
+        // 3. Calculate direction and move ONE page only
+        function handleSwipe() {
+            const threshold = 50; // Min distance to count as a swipe
+            const distance = startX - endX;
+
+            if (distance > threshold) {
+                // Swiped Left -> Next Page
+                if (currentIndex < totalSlides - 1) {
+                    currentIndex++;
+                }
+            } else if (distance < -threshold) {
+                // Swiped Right -> Previous Page
+                if (currentIndex > 0) {
+                    currentIndex--;
+                }
             }
-        });
+            
+            updateSlider();
+        }
+
+        function updateSlider() {
+            // Move the slider container using CSS transform
+            slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+            
+            // Update Counter
+            counter.innerText = `${currentIndex + 1} / ${totalSlides}`;
+        }
     </script>
+
 </body>
 </html>
